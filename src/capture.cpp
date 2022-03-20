@@ -10,14 +10,22 @@ void capture()
 {
   unsigned int totalSamples = 1, sampleProgression = 0;
   auto lastRun = std::chrono::high_resolution_clock::now();
-  enum SampleDataLabels { accelXLabel, accelYLabel, accelZLabel, gyroXLabel, gyroYLabel, gyroZLabel };
   float sampleData[6][SAMPLE_PERIOD];
-  std::ofstream sampleCSV;
 
-  // init previous raw data
-  float previousAccelX = 0, previousAccelY = 0, previousAccelZ = 0, previousGyroX = 0, previousGyroY = 0, previousGyroZ = 0;
-  // init previous filtered data
-  float previousFilteredAccelX = 0, previousFilteredAccelY = 0, previousFilteredAccelZ = 1, previousFilteredGyroX = 0, previousFilteredGyroY = 0, previousFilteredGyroZ = 0;
+  // loop constant data
+  enum SampleDataLabels { accelXLabel, accelYLabel, accelZLabel, gyroXLabel, gyroYLabel, gyroZLabel };
+  const int regLocations[6][2] = {
+    { ACCEL_XOUT_H, ACCEL_XOUT_L },
+    { ACCEL_YOUT_H, ACCEL_YOUT_L },
+    { ACCEL_ZOUT_H, ACCEL_ZOUT_L },
+    { GYRO_XOUT_H, GYRO_XOUT_L },
+    { GYRO_YOUT_H, GYRO_YOUT_L },
+    { GYRO_ZOUT_H, GYRO_ZOUT_L }
+  };
+  const int divsors[2] = {
+    ACCEL_DIVISOR,
+    GYRO_DIVISOR
+  };
 
   // retrieve offset data
   std::ifstream offsetCSV;
@@ -44,20 +52,20 @@ void capture()
       lastRun = std::chrono::high_resolution_clock::now();
 
       // gather data from mpu
-      float accelX = ((float)getSensorData(ACCEL_XOUT_H, ACCEL_XOUT_L) - offsets[accelXLabel]);
-      float accelY = ((float)getSensorData(ACCEL_YOUT_H, ACCEL_YOUT_L) - offsets[accelYLabel]);
-      float accelZ = ((float)getSensorData(ACCEL_ZOUT_H, ACCEL_ZOUT_L) - offsets[accelZLabel]);
-      float gyroX = ((float)getSensorData(GYRO_XOUT_H, GYRO_XOUT_L) - offsets[gyroXLabel]);
-      float gyroY = ((float)getSensorData(GYRO_YOUT_H, GYRO_YOUT_L) - offsets[gyroYLabel]);
-      float gyroZ = ((float)getSensorData(GYRO_ZOUT_H, GYRO_ZOUT_L) - offsets[gyroZLabel]);
+      float sampleFrameData[6];
 
-      // add to buffer
-      sampleData[accelXLabel][sampleProgression] = accelX;
-      sampleData[accelYLabel][sampleProgression] = accelY;
-      sampleData[accelZLabel][sampleProgression] = accelZ;
-      sampleData[gyroXLabel][sampleProgression] = gyroX;
-      sampleData[gyroYLabel][sampleProgression] = gyroY;
-      sampleData[gyroZLabel][sampleProgression] = gyroZ;
+      for (int i = 0; i < 6; i++)
+      {
+        // fetch from sensor reg
+        float tempMetric = getSensorData(regLocations[i][0], regLocations[i][1]);
+        // apply offset
+        tempMetric -= offsets[i];
+        // apply divisor
+        tempMetric /= divsors[i / 3];
+        // add to buffer
+        sampleData[i][sampleProgression] = tempMetric;
+      }
+
 
       // indicate we progressed
       sampleProgression++;
@@ -68,27 +76,32 @@ void capture()
 
       if (sampleProgression >= SAMPLE_PERIOD)
       {
-        // save sample to csv
-        sampleCSV.open(std::to_string(totalSamples) + ".cap.csv");
-        
-        sampleCSV << "ax,ay,az,gx,gy,gz\n";
-        for (int i = 0; i < SAMPLE_PERIOD; i++)
-        {
-          for (int label = 0; label < 6; label++)
-          {
-            sampleCSV << sampleData[label][i];
-            if (label != 5)
-              sampleCSV << ",";
-          }
-          sampleCSV << "\n";
-        }
-        
-        sampleCSV.close();
-
-        // reset sample progression
-        sampleProgression = 0;
+        saveSampleToCSV(sampleData, std::to_string(totalSamples));
         totalSamples++;
+        sampleProgression = 0;
       }
     }
   }
+}
+
+// TODO: add ability for shape and dynamic column names
+void saveSampleToCSV(float sampleData[][SAMPLE_PERIOD], std::string name)
+{
+  // save sample to csv
+  std::ofstream sampleCSV;
+  sampleCSV.open(name + ".cap.csv");
+  
+  sampleCSV << "ax,ay,az,gx,gy,gz\n";
+  for (int i = 0; i < SAMPLE_PERIOD; i++)
+  {
+    for (int label = 0; label < 6; label++)
+    {
+      sampleCSV << sampleData[label][i];
+      if (label != 5)
+        sampleCSV << ",";
+    }
+    sampleCSV << "\n";
+  }
+  
+  sampleCSV.close();
 }
