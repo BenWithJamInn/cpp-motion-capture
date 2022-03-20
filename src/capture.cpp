@@ -51,29 +51,13 @@ void capture()
       float gyroY = (float)getSensorData(GYRO_YOUT_H, GYRO_YOUT_L);
       float gyroZ = (float)getSensorData(GYRO_ZOUT_H, GYRO_ZOUT_L);
 
-      // gather previous data
-      previousAccelX = accelX;
-      previousAccelY = accelY;
-      previousAccelZ = accelZ;
-      previousGyroX = gyroX;
-      previousGyroY = gyroY;
-      previousGyroY = gyroZ;
-
-      // apply filter
-      previousFilteredAccelX = lowPassFilter(previousFilteredAccelX, accelX, previousAccelX);
-      previousFilteredAccelY = lowPassFilter(previousFilteredAccelY, accelY, previousAccelY);
-      previousFilteredAccelZ = lowPassFilter(previousFilteredAccelZ, accelZ, previousAccelZ);
-      previousFilteredGyroX = lowPassFilter(previousFilteredGyroX, gyroX, previousGyroX);
-      previousFilteredGyroY = lowPassFilter(previousFilteredGyroY, gyroY, previousGyroY);
-      previousFilteredGyroZ = lowPassFilter(previousFilteredGyroZ, gyroZ, previousGyroY);
-
       // add to buffer
-      sampleData[accelXLabel][sampleProgression] = (previousFilteredAccelX) - offsets[accelXLabel];
-      sampleData[accelYLabel][sampleProgression] = (previousFilteredAccelY) - offsets[accelYLabel];
-      sampleData[accelZLabel][sampleProgression] = (previousFilteredAccelZ) - offsets[accelZLabel];
-      sampleData[gyroXLabel][sampleProgression] = (previousFilteredGyroX) - offsets[gyroXLabel];
-      sampleData[gyroYLabel][sampleProgression] = (previousFilteredGyroY) - offsets[gyroYLabel];
-      sampleData[gyroZLabel][sampleProgression] = (previousFilteredGyroZ) - offsets[gyroZLabel];
+      sampleData[accelXLabel][sampleProgression] = accelX;
+      sampleData[accelYLabel][sampleProgression] = accelY;
+      sampleData[accelZLabel][sampleProgression] = accelZ;
+      sampleData[gyroXLabel][sampleProgression] = gyroX;
+      sampleData[gyroYLabel][sampleProgression] = gyroY;
+      sampleData[gyroZLabel][sampleProgression] = gyroZ;
 
       // indicate we progressed
       sampleProgression++;
