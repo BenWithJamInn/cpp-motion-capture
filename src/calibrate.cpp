@@ -45,12 +45,12 @@ std::vector<float> generateOffsetCollection()
   float accel_xout_offset, accel_yout_offset, accel_zout_offset;
   float gyro_xout_offset, gyro_yout_offset, gyro_zout_offset;
 
-  std::thread t2(generateOffset, &accel_xout_offset, ACCEL_XOUT_H, ACCEL_XOUT_L, ACCEL_DIVISOR, 0);
-  std::thread t3(generateOffset, &accel_yout_offset, ACCEL_YOUT_H, ACCEL_YOUT_L, ACCEL_DIVISOR, 0);
-  std::thread t4(generateOffset, &accel_zout_offset, ACCEL_ZOUT_H, ACCEL_ZOUT_L, ACCEL_DIVISOR, 1); // gravity
-  std::thread t5(generateOffset, &gyro_xout_offset, GYRO_XOUT_H, GYRO_XOUT_L, GYRO_DIVISOR, 0);
-  std::thread t6(generateOffset, &gyro_yout_offset, GYRO_YOUT_H, GYRO_YOUT_L, GYRO_DIVISOR, 0);
-  std::thread t7(generateOffset, &gyro_zout_offset, GYRO_ZOUT_H, GYRO_ZOUT_L, GYRO_DIVISOR, 0);
+  std::thread t2(generateOffset, &accel_xout_offset, ACCEL_XOUT_H, ACCEL_XOUT_L, 0);
+  std::thread t3(generateOffset, &accel_yout_offset, ACCEL_YOUT_H, ACCEL_YOUT_L, 0);
+  std::thread t4(generateOffset, &accel_zout_offset, ACCEL_ZOUT_H, ACCEL_ZOUT_L, ACCEL_DIVISOR); // gravity
+  std::thread t5(generateOffset, &gyro_xout_offset, GYRO_XOUT_H, GYRO_XOUT_L, 0);
+  std::thread t6(generateOffset, &gyro_yout_offset, GYRO_YOUT_H, GYRO_YOUT_L, 0);
+  std::thread t7(generateOffset, &gyro_zout_offset, GYRO_ZOUT_H, GYRO_ZOUT_L, 0);
 
   t2.join();
   t3.join();
@@ -64,13 +64,13 @@ std::vector<float> generateOffsetCollection()
   return result;
 }
 
-void generateOffset(float *value, int high, int low, int divisor, float intendedValue)
+void generateOffset(float *value, int high, int low, float intendedValue)
 {
   double total;
 
   for (int i = 0; i < CALI_SAMPLE_SIZE; i++)
   {
-    float num = (float)getSensorData(high, low) / divisor;
+    float num = (float)getSensorData(high, low);
     total += num;
   }
 

@@ -44,12 +44,12 @@ void capture()
       lastRun = std::chrono::high_resolution_clock::now();
 
       // gather data from mpu
-      float accelX = (float)getSensorData(ACCEL_XOUT_H, ACCEL_XOUT_L);
-      float accelY = (float)getSensorData(ACCEL_YOUT_H, ACCEL_YOUT_L);
-      float accelZ = (float)getSensorData(ACCEL_ZOUT_H, ACCEL_ZOUT_L);
-      float gyroX = (float)getSensorData(GYRO_XOUT_H, GYRO_XOUT_L);
-      float gyroY = (float)getSensorData(GYRO_YOUT_H, GYRO_YOUT_L);
-      float gyroZ = (float)getSensorData(GYRO_ZOUT_H, GYRO_ZOUT_L);
+      float accelX = ((float)getSensorData(ACCEL_XOUT_H, ACCEL_XOUT_L) - offsets[accelXLabel]);
+      float accelY = ((float)getSensorData(ACCEL_YOUT_H, ACCEL_YOUT_L) - offsets[accelYLabel]);
+      float accelZ = ((float)getSensorData(ACCEL_ZOUT_H, ACCEL_ZOUT_L) - offsets[accelZLabel]);
+      float gyroX = ((float)getSensorData(GYRO_XOUT_H, GYRO_XOUT_L) - offsets[gyroXLabel]);
+      float gyroY = ((float)getSensorData(GYRO_YOUT_H, GYRO_YOUT_L) - offsets[gyroYLabel]);
+      float gyroZ = ((float)getSensorData(GYRO_ZOUT_H, GYRO_ZOUT_L) - offsets[gyroZLabel]);
 
       // add to buffer
       sampleData[accelXLabel][sampleProgression] = accelX;
