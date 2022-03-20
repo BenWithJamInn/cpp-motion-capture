@@ -1,0 +1,2 @@
+rm ./*.cap.csv
+./track capture
