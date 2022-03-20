@@ -36,9 +36,9 @@ void capture()
   if (offsetCSV.good())
   {
     std::string offset;
-    for (int i; std::getline(offsetCSV, offset, '\n'); i++)
+    for (int row; std::getline(offsetCSV, offset, '\n'); row++)
     {
-      offsets[i] = std::stof(offset);
+      offsets[row] = std::stof(offset);
     }
   }
 
@@ -54,16 +54,16 @@ void capture()
       // gather data from mpu
       float sampleFrameData[6];
 
-      for (int i = 0; i < 6; i++)
+      for (int row = 0; row < 6; row++)
       {
         // fetch from sensor reg
-        float tempMetric = getSensorData(regLocations[i][0], regLocations[i][1]);
+        float tempMetric = getSensorData(regLocations[row][0], regLocations[row][1]);
         // apply offset
-        tempMetric -= offsets[i];
+        tempMetric -= offsets[row];
         // apply divisor
-        tempMetric /= divsors[i / 3];
+        tempMetric /= divsors[row / 3];
         // add to buffer
-        sampleData[i][sampleProgression] = tempMetric;
+        sampleData[row][sampleProgression] = tempMetric;
       }
 
 
@@ -76,7 +76,8 @@ void capture()
 
       if (sampleProgression >= SAMPLE_PERIOD)
       {
-        saveSampleToCSV(sampleData, std::to_string(totalSamples));
+        std::string columnNames[] = { "ax", "ay", "az", "gx", "gy", "gz" };
+        saveSampleToCSV(sampleData, 6, SAMPLE_PERIOD, columnNames, std::to_string(totalSamples));
         totalSamples++;
         sampleProgression = 0;
       }
@@ -84,20 +85,23 @@ void capture()
   }
 }
 
-// TODO: add ability for shape and dynamic column names
-void saveSampleToCSV(float sampleData[][SAMPLE_PERIOD], std::string name)
+void saveSampleToCSV(float sampleData[][SAMPLE_PERIOD], int shapeWidth, int shapeLength, std::string columnNames[], std::string name)
 {
   // save sample to csv
   std::ofstream sampleCSV;
   sampleCSV.open(name + ".cap.csv");
+
+  for (int i = 0; i < shapeWidth; i++)
+    sampleCSV << columnNames[i] << ",";
+
+  sampleCSV << "\n";
   
-  sampleCSV << "ax,ay,az,gx,gy,gz\n";
-  for (int i = 0; i < SAMPLE_PERIOD; i++)
+  for (int row = 0; row < shapeLength; row++)
   {
-    for (int label = 0; label < 6; label++)
+    for (int column = 0; column < shapeWidth; column++)
     {
-      sampleCSV << sampleData[label][i];
-      if (label != 5)
+      sampleCSV << sampleData[column][row];
+      if (column != 5)
         sampleCSV << ",";
     }
     sampleCSV << "\n";
